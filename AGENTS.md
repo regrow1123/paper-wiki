@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Paper Wiki — 유지보수 규약 (Schema)
 
-이 문서는 Claude Code(또는 호환 에이전트)가 이 저장소를 **학술 논문 위키 유지보수자** 역할로 다룰 때 따라야 할 규칙이다. 사용자는 원문 논문 소스(tex)를 `raw/papers/<slug>/`에 넣고 질문을 던진다. LLM은 `wiki/` 안의 마크다운을 읽고/쓰며, 검색은 MCP 도구(`mcp__paper-wiki__*`)로 수행한다.
+이 문서는 Claude Code(또는 호환 에이전트)가 이 저장소를 **학술 논문 위키 유지보수자** 역할로 다룰 때 따라야 할 규칙이다. 사용자는 논문 PDF를 `raw/papers/<slug>.pdf`로 넣고 질문을 던진다. LLM은 `wiki/` 안의 마크다운을 읽고/쓰며, 검색은 MCP 도구(`mcp__paper-wiki__*`)로 수행한다.
 
 ## 개발 명령
 
@@ -15,8 +15,8 @@ scripts/stop-llama-servers.sh
 
 # 색인 관리 — shell에서 직접 (MCP와 동일한 로직)
 uv run paper-wiki index-build                  # raw/papers/ 전체 재색인
-uv run paper-wiki index-add papers/<slug>      # 단일 논문 upsert
-uv run paper-wiki index-remove papers/<slug>   # 단일 논문 제거
+uv run paper-wiki index-add papers/<slug>.pdf  # 단일 논문 upsert
+uv run paper-wiki index-remove papers/<slug>.pdf # 단일 논문 제거
 uv run paper-wiki reindex                      # index-build alias
 
 # 조회
@@ -24,7 +24,7 @@ uv run paper-wiki search "질문" --top-k 10
 uv run paper-wiki search "질문" --no-rerank    # 리랭크 스킵
 uv run paper-wiki stats                        # 청크 수·소스 수
 uv run paper-wiki list-sources                 # 색인된 논문
-uv run paper-wiki list-raw                     # raw/papers/에 있는 폴더 (색인 여부 무관)
+uv run paper-wiki list-raw                     # raw/papers/에 있는 PDF (색인 여부 무관)
 
 # 포맷/린트 (ruff, line-length=100, py311)
 uv run ruff check src/
@@ -40,7 +40,7 @@ CLI (`cli.py`) 과 MCP 서버 (`mcp_server.py`)는 **동일한 내부 함수**(`
 | 모듈 | 역할 |
 |---|---|
 | `config.py` | pydantic-settings로 `.env` 로딩. `PROJECT_ROOT` 기준 경로 해석. `get_settings()`는 lru_cache. |
-| `parsers.py` | `raw/papers/<slug>/` 트리를 스캔해 `SourceRef` 생성. 모든 경로 인자의 정규화 진입점. tex `\input`/`\include`를 재귀 플래튼. |
+| `parsers.py` | `raw/papers/*.pdf`를 스캔해 `SourceRef` 생성. 모든 경로 인자의 정규화 진입점. PyMuPDF로 페이지별 텍스트 추출. |
 | `embeddings.py` | llama-server `/v1/embeddings` 호출 (Qwen3-Embedding). LlamaIndex `BaseEmbedding` 구현. |
 | `reranker.py` | llama-server `/v1/rerank` 호출 (Qwen3-Reranker). 재정렬 후 score 주입. |
 | `dummy_llm.py` | LlamaIndex가 생성형 LLM을 요구하는 경로를 막기 위한 MockLLM. 이 저장소는 순수 검색만 한다. |
@@ -53,7 +53,8 @@ CLI (`cli.py`) 과 MCP 서버 (`mcp_server.py`)는 **동일한 내부 함수**(`
 ### 중요한 경로 규약
 
 - **모든 경로 인자는 `raw/` 기준 상대 경로**로 통일한다 (예: `papers/my-paper`). `parsers.resolve_source`가 정규화한다.
-- `raw/papers/<slug>/` 아래가 아닌 경로는 거부된다.
+- `raw/papers/*.pdf` 파일만 색인 대상. 디렉토리·다른 확장자는 거부된다.
+- 경로 인자에 `.pdf` 확장자 생략 가능 (`papers/my-paper` → `papers/my-paper.pdf` 자동 부가).
 - Chroma와 `wiki/`는 **dual-write 금지**. 색인은 MCP 도구/CLI로만 수정한다.
 - 임베딩 모델을 바꾸면 차원이 달라지므로 `storage/chroma/`를 지우고 `reindex`.
 
@@ -70,8 +71,7 @@ CLI (`cli.py`) 과 MCP 서버 (`mcp_server.py`)는 **동일한 내부 함수**(`
 
 ```
 raw/
-  papers/<slug>/                      # 학술 논문 tex 소스
-    main.tex, sections/, figures/, refs.bib
+  papers/<slug>.pdf                   # 학술 논문 PDF
   assets/                             # 공용 이미지 등
 wiki/
   index.md                            # 콘텐츠 카탈로그 (매 ingest마다 갱신)
@@ -93,7 +93,7 @@ title: "Title in Korean (English term if applicable)"
 slug: my-slug
 tags: [tag1, tag2]
 sources:
-  - raw/papers/<slug>/main.tex
+  - raw/papers/<slug>.pdf
 created: 2026-04-17
 updated: 2026-04-17
 ---
@@ -114,10 +114,10 @@ updated: 2026-04-17
 
 ### Ingest (새 논문 추가)
 
-사용자가 `raw/papers/<slug>/` 아래에 새 논문을 추가하면 다음을 순서대로 수행:
+사용자가 `raw/papers/<slug>.pdf`로 새 논문을 추가하면 다음을 순서대로 수행:
 
 1. **색인 추가**: `mcp__paper-wiki__index_add(path)` 호출. 반환된 `added_chunks`를 확인.
-2. **원문 읽기**: `mcp__paper-wiki__get_document(path)` 또는 Read 도구로 tex 원문 확인.
+2. **원문 읽기**: PDF 원문은 `search` 결과의 청크로 확인하고, 필요하면 외부 뷰어(또는 `get_document`로 바이너리) 사용.
 3. **사용자와 핵심 요약 논의** (1~3문장 takeaway).
 4. **sources 페이지 작성**: `wiki/sources/<slug>.md` 새로 만들거나 갱신. 최소 섹션:
    - Summary (3~7줄)
@@ -129,7 +129,7 @@ updated: 2026-04-17
 7. **log.md 추가** (append):
    ```
    ## [2026-04-17] ingest | <title>
-   - source: raw/papers/<slug>
+   - source: raw/papers/<slug>.pdf
    - pages touched: wiki/sources/..., wiki/entities/..., wiki/concepts/...
    ```
 8. **커밋** (사용자가 허용하면): `ingest: add <title>`.

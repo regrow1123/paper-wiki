@@ -2,7 +2,7 @@
 
 학술 논문 전용 개인 지식베이스(personal knowledge base) 엔진.
 
-- `raw/papers/<slug>/`에 논문 tex 소스를 넣고,
+- `raw/papers/<slug>.pdf`에 논문 PDF를 넣고,
 - `wiki/`에 LLM이 유지하는 한국어 마크다운 지식 그래프를 쌓으며,
 - Claude Code / 호환 에이전트가 **MCP 도구**로 검색·인덱싱·통계 조회를 수행한다.
 
@@ -58,7 +58,7 @@ uv run paper-wiki search "질문 예시"
 
 ```
 raw/                   # 원본 (immutable)
-  papers/<slug>/       # 논문 tex 소스
+  papers/<slug>.pdf    # 논문 PDF
   assets/              # 공용 에셋
 wiki/                  # LLM이 쓰는 마크다운
   index.md, log.md
