@@ -76,7 +76,7 @@ def get_document(path: str) -> dict[str, Any]:
 
 @mcp.tool
 def index_add(path: str) -> dict[str, Any]:
-    """Upsert a paper folder into the index."""
+    """Upsert a paper PDF into the index."""
     return ingest_mod.ingest_one(path)
 
 

@@ -20,7 +20,7 @@ def _print(obj) -> None:
 
 @app.command("index-add")
 def index_add(path: str) -> None:
-    """Upsert a single paper folder into the index."""
+    """Upsert a single paper PDF into the index."""
     _print(ingest_mod.ingest_one(path))
 
 

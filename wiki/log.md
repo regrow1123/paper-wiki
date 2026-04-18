@@ -5,6 +5,6 @@ Append-only. 각 항목은 `## [YYYY-MM-DD] <action> | <title>` 형태로 시작
 
 <!-- 예시
 ## [2026-04-17] ingest | Attention Is All You Need
-- source: raw/papers/attention-is-all-you-need/main.tex
+- source: raw/papers/attention-is-all-you-need.pdf
 - pages touched: wiki/sources/attention-is-all-you-need.md, wiki/concepts/self-attention.md
 -->
