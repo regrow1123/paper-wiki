@@ -76,7 +76,7 @@ def list_sources_cmd() -> None:
 
 @app.command("list-raw")
 def list_raw_cmd() -> None:
-    """List paper folders present under raw/papers/ (not necessarily indexed)."""
+    """List paper PDFs present under raw/papers/ (not necessarily indexed)."""
     refs = [{"path": r.rel_path, "title": r.title} for r in iter_all_sources()]
     _print(refs)
 

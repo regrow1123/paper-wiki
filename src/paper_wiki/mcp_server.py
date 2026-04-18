@@ -60,7 +60,7 @@ def rerank(
 def get_document(path: str) -> dict[str, Any]:
     """Return the raw content of a file under raw/. Truncates at ~1 MB.
 
-    Pass the path to a specific .tex file (e.g. 'papers/<slug>/main.tex').
+    Pass the path to a paper PDF (e.g. 'papers/<slug>.pdf').
     Returns {path, text, truncated, size}.
     """
     target = _safe_raw_path(path)
