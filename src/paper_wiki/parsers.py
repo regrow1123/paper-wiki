@@ -54,15 +54,14 @@ def resolve_source(path_input: str | Path) -> SourceRef:
     raw_root = s.resolve(s.raw_dir)
     p = Path(path_input)
     if p.suffix.lower() != ".pdf":
-        p = p.with_suffix(".pdf")
-    if not p.is_absolute():
-        p = (raw_root / p).resolve() if not str(p).startswith(str(raw_root)) else p.resolve()
-    else:
-        p = p.resolve()
-    if not str(p).startswith(str(raw_root)):
-        raise ValueError(f"Path escapes raw/: {p}")
+        p = p.parent / (p.name + ".pdf")
+    p = p if p.is_absolute() else (raw_root / p)
+    p = p.resolve()
+    try:
+        rel = p.relative_to(raw_root)
+    except ValueError as e:
+        raise ValueError(f"Path escapes raw/: {p}") from e
 
-    rel = p.relative_to(raw_root)
     parts = rel.parts
     if len(parts) != 2 or parts[0] != "papers" or not parts[1].endswith(".pdf"):
         raise ValueError(f"Path must be a PDF directly under raw/papers/: {rel}")
@@ -86,7 +85,7 @@ def load_nodes(ref: SourceRef) -> List[TextNode]:
     splitter = _splitter()
     indexed_at = _now_iso()
     out: List[TextNode] = []
-    chunk_id = 0
+    chunk_id = 0  # 0-based counter across the whole document, monotonic across pages
     for page_num, text in _extract_pages(ref.path):
         if not text.strip():
             continue
