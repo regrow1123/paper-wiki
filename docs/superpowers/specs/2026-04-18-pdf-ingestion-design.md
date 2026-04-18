@@ -29,7 +29,7 @@ Paper Wiki currently reads academic papers from `raw/papers/<slug>/` as LaTeX so
 - `papers/<slug>.pdf` — full relative path
 - `papers/<slug>` — bare slug; `.pdf` is appended and existence checked
 
-Paths outside `raw/papers/` or pointing to a directory are rejected.
+Resolution order: (1) if the input does not end in `.pdf`, append it; (2) resolve against `raw/`; (3) reject if the result is outside `raw/papers/`, is a directory, or does not exist.
 
 ## Code Changes (`src/paper_wiki/parsers.py`)
 
