@@ -69,6 +69,7 @@ start_server() {
         --n-gpu-layers "$LLAMA_NGL" \
         "${device_flag[@]}" \
         --ctx-size 8192 --parallel 2 \
+        --batch-size 2048 --ubatch-size 2048 \
         "$@" \
         > "$logfile" 2>&1 &
     echo $! > "$pidfile"
