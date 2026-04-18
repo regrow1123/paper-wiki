@@ -62,7 +62,7 @@ CLI (`cli.py`) 과 MCP 서버 (`mcp_server.py`)는 **동일한 내부 함수**(`
 
 | 레이어 | 위치 | 소유자 | 설명 |
 |---|---|---|---|
-| 원본 | `raw/papers/` | 사용자 | immutable. 논문 tex 소스 트리. LLM은 읽기만. |
+| 원본 | `raw/papers/` | 사용자 | immutable. 논문 PDF 저장소. LLM은 읽기만. |
 | 위키 | `wiki/` | LLM | 요약·개념·인물·합성 페이지 (한국어 + 영문 용어). |
 | 색인 | `storage/chroma/` | 엔진 | Chroma 영속 벡터 DB. 재생성 가능. |
 | 검색 엔진 | llama-server + LlamaIndex | 엔진 | Qwen3-Embedding(`/v1/embeddings`) + Qwen3-Reranker(`/v1/rerank`). |
