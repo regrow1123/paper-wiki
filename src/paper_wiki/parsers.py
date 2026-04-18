@@ -1,4 +1,4 @@
-"""Source discovery and chunking for `.md` memos and `.tex` papers."""
+"""Source discovery and chunking for `.tex` papers under `raw/papers/`."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from typing import Iterable, List
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import Document, TextNode
 
-from .config import Settings, get_settings
+from .config import get_settings
 
 _TEX_COMMENT_RE = re.compile(r"(?<!\\)%.*?$", re.MULTILINE)
 _TEX_INPUT_RE = re.compile(r"\\(?:input|include|subfile)\{([^}]+)\}")
@@ -19,23 +19,14 @@ _TEX_INPUT_RE = re.compile(r"\\(?:input|include|subfile)\{([^}]+)\}")
 
 @dataclass
 class SourceRef:
-    path: Path            # absolute path
-    rel_path: str         # relative to raw/ (stored in metadata)
-    source_type: str      # "memo" | "paper"
-    slug: str             # folder name (paper) or basename stem (memo)
+    path: Path            # absolute path to the paper folder
+    rel_path: str         # relative to raw/ (stored in metadata), e.g. "papers/<slug>"
+    slug: str             # folder name
     title: str
 
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
-
-
-def _markdown_title(text: str, fallback: str) -> str:
-    for line in text.splitlines():
-        line = line.strip()
-        if line.startswith("# "):
-            return line.lstrip("# ").strip()
-    return fallback
 
 
 def _tex_title(text: str, fallback: str) -> str:
@@ -46,7 +37,7 @@ def _tex_title(text: str, fallback: str) -> str:
 
 
 def resolve_source(path_input: str | Path) -> SourceRef:
-    """Classify a source path relative to raw/ and extract a slug/title."""
+    """Resolve a path (relative to raw/ or absolute) to a paper SourceRef."""
     s = get_settings()
     raw_root = s.resolve(s.raw_dir)
     p = Path(path_input)
@@ -59,27 +50,16 @@ def resolve_source(path_input: str | Path) -> SourceRef:
 
     rel = p.relative_to(raw_root)
     parts = rel.parts
-    if parts and parts[0] == "memos":
-        if not p.is_file():
-            raise FileNotFoundError(f"Memo file not found: {p}")
-        slug = p.stem
-        title = _markdown_title(p.read_text(encoding="utf-8"), slug)
-        return SourceRef(p, str(rel), "memo", slug, title)
+    if not parts or parts[0] != "papers" or len(parts) < 2:
+        raise ValueError(f"Path must be under raw/papers/<slug>/: {rel}")
 
-    if parts and parts[0] == "papers":
-        # Expect raw/papers/<slug>/... — resolve to the paper folder.
-        if len(parts) < 2:
-            raise ValueError("Paper path must be under raw/papers/<slug>/")
-        slug = parts[1]
-        folder = raw_root / "papers" / slug
-        if not folder.is_dir():
-            raise FileNotFoundError(f"Paper folder not found: {folder}")
-        main_tex = _find_main_tex(folder)
-        title = _tex_title(_flatten_tex(main_tex), slug) if main_tex else slug
-        # Use the folder as the logical source path for upsert identity.
-        return SourceRef(folder, f"papers/{slug}", "paper", slug, title)
-
-    raise ValueError(f"Path is neither a memo nor a paper: {rel}")
+    slug = parts[1]
+    folder = raw_root / "papers" / slug
+    if not folder.is_dir():
+        raise FileNotFoundError(f"Paper folder not found: {folder}")
+    main_tex = _find_main_tex(folder)
+    title = _tex_title(_flatten_tex(main_tex), slug) if main_tex else slug
+    return SourceRef(folder, f"papers/{slug}", slug, title)
 
 
 def _find_main_tex(folder: Path) -> Path | None:
@@ -135,7 +115,6 @@ def _make_nodes(text: str, ref: SourceRef) -> List[TextNode]:
             text=n.get_content(),
             metadata={
                 "source_path": ref.rel_path,
-                "source_type": ref.source_type,
                 "slug": ref.slug,
                 "title": ref.title,
                 "chunk_id": i,
@@ -147,35 +126,22 @@ def _make_nodes(text: str, ref: SourceRef) -> List[TextNode]:
 
 
 def load_nodes(ref: SourceRef) -> List[TextNode]:
-    if ref.source_type == "memo":
-        text = ref.path.read_text(encoding="utf-8")
-    elif ref.source_type == "paper":
-        main_tex = _find_main_tex(ref.path)
-        if not main_tex:
-            raise FileNotFoundError(f"No .tex entrypoint inside {ref.path}")
-        text = _flatten_tex(main_tex)
-    else:  # pragma: no cover
-        raise ValueError(f"Unknown source_type: {ref.source_type}")
+    main_tex = _find_main_tex(ref.path)
+    if not main_tex:
+        raise FileNotFoundError(f"No .tex entrypoint inside {ref.path}")
+    text = _flatten_tex(main_tex)
     return _make_nodes(text, ref)
 
 
-def iter_all_sources(source_type: str | None = None) -> Iterable[SourceRef]:
-    """Walk raw/ and yield one SourceRef per memo / paper folder."""
+def iter_all_sources() -> Iterable[SourceRef]:
+    """Walk raw/papers/ and yield one SourceRef per paper folder."""
     s = get_settings()
     raw_root = s.resolve(s.raw_dir)
-    if source_type in (None, "memo"):
-        memos_dir = raw_root / "memos"
-        if memos_dir.is_dir():
-            for f in sorted(memos_dir.rglob("*.md")):
-                try:
-                    yield resolve_source(f)
-                except (ValueError, FileNotFoundError):
-                    continue
-    if source_type in (None, "paper"):
-        papers_dir = raw_root / "papers"
-        if papers_dir.is_dir():
-            for folder in sorted(p for p in papers_dir.iterdir() if p.is_dir()):
-                try:
-                    yield resolve_source(folder)
-                except (ValueError, FileNotFoundError):
-                    continue
+    papers_dir = raw_root / "papers"
+    if not papers_dir.is_dir():
+        return
+    for folder in sorted(p for p in papers_dir.iterdir() if p.is_dir()):
+        try:
+            yield resolve_source(folder)
+        except (ValueError, FileNotFoundError):
+            continue

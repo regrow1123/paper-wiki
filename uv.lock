@@ -1483,35 +1483,6 @@ wheels = [
 ]
 
 [[package]]
-name = "llm-wiki"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "chromadb" },
-    { name = "fastmcp" },
-    { name = "httpx" },
-    { name = "llama-index-core" },
-    { name = "llama-index-vector-stores-chroma" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "python-dotenv" },
-    { name = "typer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "chromadb", specifier = ">=0.5.20" },
-    { name = "fastmcp", specifier = ">=0.2.0" },
-    { name = "httpx", specifier = ">=0.27.0" },
-    { name = "llama-index-core", specifier = ">=0.12.0" },
-    { name = "llama-index-vector-stores-chroma", specifier = ">=0.4.0" },
-    { name = "pydantic", specifier = ">=2.8.0" },
-    { name = "pydantic-settings", specifier = ">=2.5.0" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "typer", specifier = ">=0.12.0" },
-]
-
-[[package]]
 name = "markdown-it-py"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2222,6 +2193,35 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/df/de/0d2b39fb4af88a0258f3bac87dfcbb48e73fbdea4a2ed0e2213f9a4c2f9a/packaging-26.1.tar.gz", hash = "sha256:f042152b681c4bfac5cae2742a55e103d27ab2ec0f3d88037136b6bfe7c9c5de", size = 215519, upload-time = "2026-04-14T21:12:49.362Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7a/c2/920ef838e2f0028c8262f16101ec09ebd5969864e5a64c4c05fad0617c56/packaging-26.1-py3-none-any.whl", hash = "sha256:5d9c0669c6285e491e0ced2eee587eaf67b670d94a19e94e3984a481aba6802f", size = 95831, upload-time = "2026-04-14T21:12:47.56Z" },
+]
+
+[[package]]
+name = "paper-wiki"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "chromadb" },
+    { name = "fastmcp" },
+    { name = "httpx" },
+    { name = "llama-index-core" },
+    { name = "llama-index-vector-stores-chroma" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-dotenv" },
+    { name = "typer" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "chromadb", specifier = ">=0.5.20" },
+    { name = "fastmcp", specifier = ">=0.2.0" },
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "llama-index-core", specifier = ">=0.12.0" },
+    { name = "llama-index-vector-stores-chroma", specifier = ">=0.4.0" },
+    { name = "pydantic", specifier = ">=2.8.0" },
+    { name = "pydantic-settings", specifier = ">=2.5.0" },
+    { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "typer", specifier = ">=0.12.0" },
 ]
 
 [[package]]

@@ -1,6 +1,6 @@
 ---
 type: index
-title: LLM Wiki — Index
+title: Paper Wiki — Index
 updated: 2026-04-17
 ---
 

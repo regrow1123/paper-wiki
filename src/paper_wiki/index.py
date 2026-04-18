@@ -82,23 +82,19 @@ def insert_nodes(handle: IndexHandle, nodes: List[TextNode]) -> int:
 
 
 def collection_stats(collection: Collection) -> dict[str, Any]:
-    """Aggregate counts by source_type/source_path and last indexed_at."""
+    """Aggregate counts by source_path and last indexed_at."""
     # Chroma doesn't expose aggregates — pull metadata only.
     got = collection.get(include=["metadatas"])
     metas = got.get("metadatas") or []
     total = len(metas)
-    by_type: dict[str, int] = {}
     last_indexed: str = ""
     sources: dict[str, dict[str, Any]] = {}
     for m in metas:
-        st = m.get("source_type", "unknown")
-        by_type[st] = by_type.get(st, 0) + 1
         sp = m.get("source_path")
         if sp:
             entry = sources.setdefault(sp, {
                 "path": sp,
                 "title": m.get("title", sp),
-                "source_type": st,
                 "chunk_count": 0,
                 "indexed_at": m.get("indexed_at", ""),
             })
@@ -110,7 +106,6 @@ def collection_stats(collection: Collection) -> dict[str, Any]:
             last_indexed = ia
     return {
         "total_chunks": total,
-        "sources_by_type": by_type,
         "last_indexed_at": last_indexed,
         "sources": sources,
     }

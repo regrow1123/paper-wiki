@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "llm-wiki": {
+    "paper-wiki": {
       "command": "uv",
-      "args": ["run", "--project", ".", "llm-wiki-mcp"],
+      "args": ["run", "--project", ".", "paper-wiki-mcp"],
       "cwd": "."
     }
   }

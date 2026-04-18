@@ -1,8 +1,8 @@
-# LLM Wiki
+# Paper Wiki
 
-개인 지식베이스(personal knowledge base) 엔진.
+학술 논문 전용 개인 지식베이스(personal knowledge base) 엔진.
 
-- `raw/`에 업무 메모(markdown)와 논문(tex source)을 넣고,
+- `raw/papers/<slug>/`에 논문 tex 소스를 넣고,
 - `wiki/`에 LLM이 유지하는 한국어 마크다운 지식 그래프를 쌓으며,
 - Claude Code / 호환 에이전트가 **MCP 도구**로 검색·인덱싱·통계 조회를 수행한다.
 
@@ -20,7 +20,7 @@
 ### 2. 설치
 
 ```bash
-git clone <this-repo> llm-wiki && cd llm-wiki
+git clone <this-repo> paper-wiki && cd paper-wiki
 uv sync
 cp .env.example .env       # 필요시 경로·포트 편집
 scripts/fetch-models.sh     # models/에 GGUF 다운로드 (airgapped면 수동 복사)
@@ -43,14 +43,14 @@ curl -s http://127.0.0.1:8082/health
 ### 4. 색인 빌드
 
 ```bash
-uv run llm-wiki index-build      # raw/ 전체 스캔
-uv run llm-wiki stats            # 현황
-uv run llm-wiki search "질문 예시"
+uv run paper-wiki index-build    # raw/papers/ 전체 스캔
+uv run paper-wiki stats          # 현황
+uv run paper-wiki search "질문 예시"
 ```
 
 ### 5. Claude Code 연동
 
-`.mcp.json`이 프로젝트 루트에 이미 있다. Claude Code를 이 디렉토리에서 열면 `llm-wiki` MCP 서버가 자동 등록된다. 도구 이름은 `mcp__llm-wiki__search`, `mcp__llm-wiki__index_add` 등.
+`.mcp.json`이 프로젝트 루트에 이미 있다. Claude Code를 이 디렉토리에서 열면 `paper-wiki` MCP 서버가 자동 등록된다. 도구 이름은 `mcp__paper-wiki__search`, `mcp__paper-wiki__index_add` 등.
 
 `AGENTS.md`(및 symlink `CLAUDE.md`)에 Ingest / Query / Lint 워크플로 규약이 들어있다. 새 세션은 이 파일을 읽고 그대로 따른다.
 
@@ -58,8 +58,7 @@ uv run llm-wiki search "질문 예시"
 
 ```
 raw/                   # 원본 (immutable)
-  memos/               # *.md 메모
-  papers/<slug>/       # tex 소스
+  papers/<slug>/       # 논문 tex 소스
   assets/              # 공용 에셋
 wiki/                  # LLM이 쓰는 마크다운
   index.md, log.md
@@ -68,7 +67,7 @@ storage/chroma/        # 벡터 DB (재생성 가능, gitignore)
 models/                # GGUF (gitignore)
 logs/                  # llama-server 로그/PID (gitignore)
 scripts/               # llama-server 기동·모델 다운로드
-src/llm_wiki/          # Python 패키지
+src/paper_wiki/        # Python 패키지
 ```
 
 ## 설정
@@ -83,7 +82,7 @@ src/llm_wiki/          # Python 패키지
 2. `models/`에 GGUF 배치 (또는 `scripts/fetch-models.sh`)
 3. `.env` 작성 (`LLAMA_SERVER_BIN` 경로만 조정하면 대개 끝)
 4. `scripts/start-llama-servers.sh`
-5. `uv run llm-wiki reindex` — `raw/`를 읽어 `storage/chroma/`를 재생성
+5. `uv run paper-wiki reindex` — `raw/papers/`를 읽어 `storage/chroma/`를 재생성
 
 `storage/`와 `logs/`, `models/`는 git 대상이 아니다. `raw/`와 `wiki/`만 버전 관리한다.
 
@@ -94,13 +93,13 @@ src/llm_wiki/          # Python 패키지
 | `search` | 벡터 검색 + 리랭크 |
 | `rerank` | 외부 텍스트 즉석 랭킹 |
 | `get_document` | `raw/` 파일 원문 반환 |
-| `index_add` | 소스 upsert |
-| `index_remove` | 소스 삭제 |
-| `reindex` | 전체/부분 재색인 |
+| `index_add` | 논문 upsert |
+| `index_remove` | 논문 삭제 |
+| `reindex` | 전체 재색인 |
 | `stats` | 색인 통계 |
-| `list_sources` | 색인된 소스 목록 |
+| `list_sources` | 색인된 논문 목록 |
 
-자세한 스펙은 `src/llm_wiki/mcp_server.py` 참고.
+자세한 스펙은 `src/paper_wiki/mcp_server.py` 참고.
 
 ## 트러블슈팅
 

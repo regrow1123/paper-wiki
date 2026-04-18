@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     llama_ngl: int = 0
 
     chroma_dir: Path = Path("storage/chroma")
-    chroma_collection: str = "llm_wiki"
+    chroma_collection: str = "paper_wiki"
     raw_dir: Path = Path("raw")
     wiki_dir: Path = Path("wiki")
 
